@@ -1,7 +1,10 @@
 using Avalonia;
+using Avalonia.Controls;
 using System;
 using System.IO;
 using System.Linq;
+using ILSpyGUI.Services;
+using ILSpyGUI.Views;
 
 namespace ILSpyGUI;
 
@@ -10,34 +13,53 @@ sealed class Program
     [STAThread]
     public static void Main(string[] args)
     {
-        // 自动检测并设置 DOTNET_ROOT（解决 ilspycmd 找不到 runtime 的问题）
+        // 自动检测并设置 DOTNET_ROOT
         EnsureDotNetRoot();
 
-        BuildAvaloniaApp()
-            .StartWithClassicDesktopLifetime(args);
+        // 检查依赖
+        var depManager = new DependencyManager();
+        var ilspy = depManager.CheckILSpyCmd();
+        var jadx = depManager.CheckJadx();
+
+        // 如果依赖未安装，显示安装对话框
+        if (!ilspy.isInstalled || !jadx.isInstalled)
+        {
+            // 启动 Avalonia 显示对话框
+            var builder = BuildAvaloniaApp();
+            builder.SetupWithoutStarting();
+
+            var checkWindow = new DependencyCheckWindow();
+            checkWindow.Show();
+            checkWindow.Closed += (s, e) =>
+            {
+                // 对话框关闭后继续启动主窗口
+                BuildAvaloniaApp()
+                    .StartWithClassicDesktopLifetime(args);
+            };
+        }
+        else
+        {
+            // 直接启动主程序
+            BuildAvaloniaApp()
+                .StartWithClassicDesktopLifetime(args);
+        }
     }
 
     private static void EnsureDotNetRoot()
     {
-        // 如果已经设置了，直接返回
         if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DOTNET_ROOT")) ||
             !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DOTNET_ROOT_ARM64")))
         {
             return;
         }
 
-        // 尝试找到 .NET Runtime 安装路径
         var possiblePaths = new[]
         {
-            // Homebrew .NET 8
             "/opt/homebrew/Cellar/dotnet@8/8.0.125/libexec",
             "/opt/homebrew/Cellar/dotnet/8.0.125/libexec",
-            // Homebrew .NET (当前版本)
             "/opt/homebrew/Cellar/dotnet/current/libexec",
-            // 标准安装路径
             "/usr/local/share/dotnet",
             "/usr/share/dotnet",
-            // 用户主目录
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".dotnet")
         };
 

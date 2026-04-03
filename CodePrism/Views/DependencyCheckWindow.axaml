@@ -1,0 +1,76 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="ILSpyGUI.Views.DependencyCheckWindow"
+        Title="CodePrism - 初始设置" Width="500" Height="400"
+        WindowStartupLocation="CenterScreen"
+        CanResize="False">
+
+  <Border Padding="20" Background="White">
+    <StackPanel Spacing="15">
+      <!-- 标题 -->
+      <StackPanel Orientation="Horizontal" Spacing="10">
+        <TextBlock Text="💎" FontSize="32"/>
+        <TextBlock Text="欢迎使用 CodePrism" FontSize="20" FontWeight="Bold" VerticalAlignment="Center"/>
+      </StackPanel>
+
+      <TextBlock Text="检测到以下依赖需要安装：" FontSize="14" Foreground="#666"/>
+
+      <!-- 依赖列表 -->
+      <Border Background="#F5F5F5" CornerRadius="8" Padding="15">
+        <StackPanel Spacing="10" x:Name="DependenciesPanel">
+          <!-- ilspycmd -->
+          <Grid ColumnDefinitions="Auto,*,Auto">
+            <TextBlock Grid.Column="0" Text="🔵" FontSize="16"/>
+            <StackPanel Grid.Column="1" Margin="10,0">
+              <TextBlock Text="ilspycmd" FontWeight="Bold"/>
+              <TextBlock Text=".NET 反编译工具" FontSize="11" Foreground="#666"/>
+            </StackPanel>
+            <TextBlock Grid.Column="2" x:Name="ILSpyStatus" Text="检测中..." Foreground="#999"/>
+          </Grid>
+
+          <!-- 分隔线 -->
+          <Rectangle Height="1" Fill="#DDD"/>
+
+          <!-- jadx -->
+          <Grid ColumnDefinitions="Auto,*,Auto">
+            <TextBlock Grid.Column="0" Text="🟠" FontSize="16"/>
+            <StackPanel Grid.Column="1" Margin="10,0">
+              <TextBlock Text="jadx" FontWeight="Bold"/>
+              <TextBlock Text="Java 反编译工具" FontSize="11" Foreground="#666"/>
+            </StackPanel>
+            <TextBlock Grid.Column="2" x:Name="JadxStatus" Text="检测中..." Foreground="#999"/>
+          </Grid>
+        </StackPanel>
+      </Border>
+
+      <!-- 下载进度 -->
+      <StackPanel x:Name="ProgressPanel" IsVisible="False" Spacing="5">
+        <TextBlock x:Name="ProgressStatus" Text="准备下载..."/>
+        <ProgressBar x:Name="ProgressBar" Value="0" Maximum="100" Height="8"/>
+      </StackPanel>
+
+      <!-- 说明文字 -->
+      <TextBlock x:Name="InfoText"
+                 Text="这些工具用于反编译 .NET 和 Java 程序。&#x0a;CodePrism 可以自动下载并安装它们。"
+                 FontSize="11"
+                 Foreground="#666"
+                 TextWrapping="Wrap"/>
+
+      <!-- 按钮 -->
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
+        <Button x:Name="ManualButton"
+                Content="手动配置"
+                Background="Transparent"
+                BorderBrush="#CCC"
+                BorderThickness="1"
+                Padding="15,8"/>
+        <Button x:Name="AutoInstallButton"
+                Content="自动下载安装"
+                Background="#3B82F6"
+                Foreground="White"
+                FontWeight="Bold"
+                Padding="20,8"/>
+      </StackPanel>
+    </StackPanel>
+  </Border>
+</Window>
