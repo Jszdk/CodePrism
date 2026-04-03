@@ -1,0 +1,218 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:ILSpyGUI.ViewModels"
+        xmlns:local="using:ILSpyGUI.Converters"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
+        x:Class="ILSpyGUI.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="CodePrism - 代码审计反编译工具" Width="1000" Height="700">
+
+  <Design.DataContext>
+    <vm:MainWindowViewModel/>
+  </Design.DataContext>
+
+  <Window.Resources>
+    <local:BoolToColorConverter x:Key="BoolToColorConverter"/>
+    <local:BoolToTextConverter x:Key="BoolToTextConverter"/>
+  </Window.Resources>
+
+  <Grid RowDefinitions="Auto,*,Auto,180">
+    <!-- 顶部工具栏 -->
+    <Border Grid.Row="0" Background="#3B82F6" Padding="12">
+      <StackPanel Orientation="Horizontal" Spacing="12">
+        <TextBlock Text="💎 CodePrism" FontSize="20" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
+        <TextBlock Text="代码棱镜 - 看透每一行源码" FontSize="13" Foreground="#BFDBFE" VerticalAlignment="Center" FontStyle="Italic"/>
+      </StackPanel>
+    </Border>
+
+    <!-- 中间内容区 - TabControl -->
+    <TabControl Grid.Row="1" Margin="10" SelectedIndex="{Binding SelectedMode}">
+      <TabItem Header="🎯 .NET (ILSpy)">
+        <Grid ColumnDefinitions="*,300">
+          <!-- 左侧文件列表 -->
+          <Border Grid.Column="0" Background="White" BoxShadow="0 2 10 0 #20000000" CornerRadius="8" Margin="0,0,10,0">
+            <Grid RowDefinitions="Auto,*">
+              <!-- 工具栏 -->
+              <Border Grid.Row="0" Background="#F3F4F6" Padding="10" CornerRadius="8,8,0,0">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <Button Content="📁 扫描目录" Command="{Binding SelectNetDirectoryCommand}"
+                          IsEnabled="{Binding !IsScanning}"
+                          Background="#3B82F6" Foreground="White" Padding="12,6"/>
+                  <Button Content="📄 添加文件" Command="{Binding SelectNetFilesCommand}"
+                          IsEnabled="{Binding !IsScanning}"
+                          Background="White" Foreground="#3B82F6" BorderBrush="#3B82F6" BorderThickness="1" Padding="12,6"/>
+                  <Button Content="✓ 全选" Command="{Binding SelectAllNetCommand}"
+                          Background="Transparent" Foreground="#6B7280" Padding="10,6"/>
+                  <Button Content="✗ 取消全选" Command="{Binding DeselectAllNetCommand}"
+                          Background="Transparent" Foreground="#6B7280" Padding="10,6"/>
+                  <Button Content="🗑 清空" Command="{Binding ClearNetFilesCommand}"
+                          Background="Transparent" Foreground="#EF4444" Padding="10,6"/>
+                </StackPanel>
+              </Border>
+              <!-- 列表 -->
+              <DataGrid Grid.Row="1" ItemsSource="{Binding DllFiles}"
+                        AutoGenerateColumns="False" IsReadOnly="False"
+                        GridLinesVisibility="Horizontal" Background="Transparent" RowHeight="36">
+                <DataGrid.Columns>
+                  <DataGridCheckBoxColumn Header="" Width="40" Binding="{Binding IsSelected, Mode=TwoWay}"/>
+                  <DataGridTextColumn Header="文件名" Width="2*" Binding="{Binding FileName}" IsReadOnly="True"/>
+                  <DataGridTextColumn Header="大小" Width="70" Binding="{Binding FileSizeText}" IsReadOnly="True"/>
+                  <DataGridTextColumn Header="路径" Width="3*" Binding="{Binding Directory}" IsReadOnly="True"/>
+                  <DataGridTextColumn Header="状态" Width="70" Binding="{Binding Status}" IsReadOnly="True"/>
+                </DataGrid.Columns>
+              </DataGrid>
+            </Grid>
+          </Border>
+
+          <!-- 右侧面板 -->
+          <ScrollViewer Grid.Column="1">
+            <StackPanel Spacing="12">
+              <!-- 状态 -->
+              <Border Background="{Binding IlSpyCmdInstalled, Converter={StaticResource BoolToColorConverter}, ConverterParameter=#10B981|#EF4444}"
+                      Padding="15" CornerRadius="8" BoxShadow="0 2 8 0 #20000000">
+                <StackPanel>
+                  <TextBlock Text="{Binding IlSpyCmdInstalled, Converter={StaticResource BoolToTextConverter}, ConverterParameter=✓ ilspycmd 就绪|✗ ilspycmd 未安装}"
+                             FontWeight="Bold" Foreground="White" FontSize="14"/>
+                </StackPanel>
+              </Border>
+
+              <!-- 输出目录 -->
+              <Border Background="White" Padding="15" CornerRadius="8" BoxShadow="0 2 8 0 #20000000">
+                <StackPanel Spacing="8">
+                  <TextBlock Text="📂 输出目录" FontWeight="Bold" Foreground="#374151"/>
+                  <TextBox Text="{Binding OutputDirectory}" IsReadOnly="True" Watermark="点击浏览..." Background="#F3F4F6"/>
+                  <Button Content="浏览..." Command="{Binding SelectOutputDirectoryCommand}" HorizontalAlignment="Right"/>
+                </StackPanel>
+              </Border>
+
+              <!-- 开始按钮 -->
+              <Button Content="🚀 开始反编译" Command="{Binding StartDecompileCommand}"
+                      IsEnabled="{Binding !IsDecompiling}"
+                      Background="#3B82F6" Foreground="White" FontSize="15" FontWeight="Bold"
+                      HorizontalAlignment="Stretch" Padding="15,12" CornerRadius="8"/>
+
+              <Button Content="⏹ 取消" Command="{Binding CancelDecompileCommand}"
+                      IsVisible="{Binding IsDecompiling}"
+                      Background="#EF4444" Foreground="White" HorizontalAlignment="Stretch" Padding="15,10"/>
+
+              <!-- 进度 -->
+              <Border Background="White" Padding="12" CornerRadius="8" IsVisible="{Binding IsDecompiling}"
+                      BoxShadow="0 2 8 0 #20000000">
+                <StackPanel Spacing="5">
+                  <TextBlock Text="{Binding StatusMessage}" FontSize="12" Foreground="#6B7280"/>
+                  <ProgressBar Value="{Binding ProgressValue}" Maximum="{Binding ProgressMaximum}" Height="8" Foreground="#3B82F6"/>
+                </StackPanel>
+              </Border>
+            </StackPanel>
+          </ScrollViewer>
+        </Grid>
+      </TabItem>
+
+      <TabItem Header="☕ Java (jadx)">
+        <Grid ColumnDefinitions="*,300">
+          <!-- 左侧文件列表 -->
+          <Border Grid.Column="0" Background="White" BoxShadow="0 2 10 0 #20000000" CornerRadius="8" Margin="0,0,10,0">
+            <Grid RowDefinitions="Auto,*">
+              <!-- 工具栏 -->
+              <Border Grid.Row="0" Background="#FEF3C7" Padding="10" CornerRadius="8,8,0,0">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <Button Content="📁 扫描目录" Command="{Binding SelectJavaDirectoryCommand}"
+                          IsEnabled="{Binding !IsScanning}"
+                          Background="#F59E0B" Foreground="White" Padding="12,6"/>
+                  <Button Content="📄 添加文件" Command="{Binding SelectJavaFilesCommand}"
+                          IsEnabled="{Binding !IsScanning}"
+                          Background="White" Foreground="#F59E0B" BorderBrush="#F59E0B" BorderThickness="1" Padding="12,6"/>
+                  <Button Content="✓ 全选" Command="{Binding SelectAllJavaCommand}"
+                          Background="Transparent" Foreground="#6B7280" Padding="10,6"/>
+                  <Button Content="✗ 取消全选" Command="{Binding DeselectAllJavaCommand}"
+                          Background="Transparent" Foreground="#6B7280" Padding="10,6"/>
+                  <Button Content="🗑 清空" Command="{Binding ClearJavaFilesCommand}"
+                          Background="Transparent" Foreground="#EF4444" Padding="10,6"/>
+                  <TextBlock Text="支持: jar, war, apk, dex, class" VerticalAlignment="Center" Foreground="#92400E" FontSize="11" Margin="10,0,0,0"/>
+                </StackPanel>
+              </Border>
+              <!-- 列表 -->
+              <DataGrid Grid.Row="1" ItemsSource="{Binding JavaFiles}"
+                        AutoGenerateColumns="False" IsReadOnly="False"
+                        GridLinesVisibility="Horizontal" Background="Transparent" RowHeight="36">
+                <DataGrid.Columns>
+                  <DataGridCheckBoxColumn Header="" Width="40" Binding="{Binding IsSelected, Mode=TwoWay}"/>
+                  <DataGridTextColumn Header="文件名" Width="2*" Binding="{Binding FileName}" IsReadOnly="True"/>
+                  <DataGridTextColumn Header="大小" Width="70" Binding="{Binding FileSizeText}" IsReadOnly="True"/>
+                  <DataGridTextColumn Header="路径" Width="3*" Binding="{Binding Directory}" IsReadOnly="True"/>
+                  <DataGridTextColumn Header="状态" Width="70" Binding="{Binding Status}" IsReadOnly="True"/>
+                </DataGrid.Columns>
+              </DataGrid>
+            </Grid>
+          </Border>
+
+          <!-- 右侧面板 -->
+          <ScrollViewer Grid.Column="1">
+            <StackPanel Spacing="12">
+              <!-- 状态 -->
+              <Border Background="{Binding JadxInstalled, Converter={StaticResource BoolToColorConverter}, ConverterParameter=#10B981|#EF4444}"
+                      Padding="15" CornerRadius="8" BoxShadow="0 2 8 0 #20000000">
+                <StackPanel>
+                  <TextBlock Text="{Binding JadxInstalled, Converter={StaticResource BoolToTextConverter}, ConverterParameter=✓ jadx 就绪|✗ jadx 未安装}"
+                             FontWeight="Bold" Foreground="White" FontSize="14"/>
+                </StackPanel>
+              </Border>
+
+              <!-- 安装提示 -->
+              <Border Background="#FEF3C7" Padding="12" CornerRadius="8" IsVisible="{Binding !JadxInstalled}">
+                <TextBlock Text="安装: brew install jadx&#x0a;或访问 github.com/skylot/jadx"
+                           FontSize="11" Foreground="#92400E" TextWrapping="Wrap"/>
+              </Border>
+
+              <!-- 输出目录 -->
+              <Border Background="White" Padding="15" CornerRadius="8" BoxShadow="0 2 8 0 #20000000">
+                <StackPanel Spacing="8">
+                  <TextBlock Text="📂 输出目录" FontWeight="Bold" Foreground="#374151"/>
+                  <TextBox Text="{Binding OutputDirectory}" IsReadOnly="True" Watermark="点击浏览..." Background="#F3F4F6"/>
+                  <Button Content="浏览..." Command="{Binding SelectOutputDirectoryCommand}" HorizontalAlignment="Right"/>
+                </StackPanel>
+              </Border>
+
+              <!-- 开始按钮 -->
+              <Button Content="🚀 开始反编译" Command="{Binding StartDecompileCommand}"
+                      IsEnabled="{Binding !IsDecompiling}"
+                      Background="#F59E0B" Foreground="White" FontSize="15" FontWeight="Bold"
+                      HorizontalAlignment="Stretch" Padding="15,12" CornerRadius="8"/>
+
+              <Button Content="⏹ 取消" Command="{Binding CancelDecompileCommand}"
+                      IsVisible="{Binding IsDecompiling}"
+                      Background="#EF4444" Foreground="White" HorizontalAlignment="Stretch" Padding="15,10"/>
+
+              <!-- 进度 -->
+              <Border Background="White" Padding="12" CornerRadius="8" IsVisible="{Binding IsDecompiling}"
+                      BoxShadow="0 2 8 0 #20000000">
+                <StackPanel Spacing="5">
+                  <TextBlock Text="{Binding StatusMessage}" FontSize="12" Foreground="#6B7280"/>
+                  <ProgressBar Value="{Binding ProgressValue}" Maximum="{Binding ProgressMaximum}" Height="8" Foreground="#F59E0B"/>
+                </StackPanel>
+              </Border>
+            </StackPanel>
+          </ScrollViewer>
+        </Grid>
+      </TabItem>
+    </TabControl>
+
+    <!-- 分隔线 -->
+    <GridSplitter Grid.Row="2" Height="3" HorizontalAlignment="Stretch" Background="#E5E7EB"/>
+
+    <!-- 底部日志 -->
+    <Border Grid.Row="3" Background="White" Margin="10" CornerRadius="8" BoxShadow="0 2 8 0 #20000000">
+      <Grid RowDefinitions="Auto,*">
+        <Border Grid.Row="0" Background="#F3F4F6" CornerRadius="8,8,0,0" Padding="10,8">
+          <TextBlock Text="📋 日志输出" FontWeight="Bold" Foreground="#374151"/>
+        </Border>
+        <TextBox Grid.Row="1" Text="{Binding LogText}" IsReadOnly="True"
+                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                 FontFamily="JetBrains Mono, Consolas, monospace" FontSize="12"
+                 Foreground="#1F2937" Background="White" BorderThickness="0" Padding="10"/>
+      </Grid>
+    </Border>
+  </Grid>
+</Window>

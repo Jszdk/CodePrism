@@ -1,0 +1,43 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+*.cache
+*.ilk
+*.pdb
+*.exe
+*.dll
+*.nupkg
+
+## Avalonia
+*.db
+
+## IDE
+.vs/
+.vscode/
+.idea/
+*.sln.DotSettings.user
+
+## OS
+.DS_Store
+Thumbs.db
+
+## Build outputs
+publish/
+out/
+dist/
+
+## Logs
+*.log
+logs/
+
+## Test results
+TestResults/
+
+## NuGet
+packages/
+project.lock.json
+
+## Rider
+*.sln.iml
