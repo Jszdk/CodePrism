@@ -85,11 +85,11 @@ brew install jadx
 
 ```bash
 # 克隆仓库
-git clone https://github.com/595614096/CodePrism.git
+git clone https://github.com/Jszdk/CodePrism.git
 cd CodePrism
 
 # 运行
-dotnet run --project ILSpyGUI
+dotnet run --project CodePrism
 ```
 
 ---
